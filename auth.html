@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Master - Authentication</title>
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div class="background-particles"></div>
+  
+  <div class="auth-container">
+    <h1 class="app-title">Task Master</h1>
+    
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Login</button>
+        <button class="auth-tab" data-tab="signup">Sign Up</button>
+      </div>
+      
+      <div class="tab-content active" id="login-content">
+        <h2>Welcome Back</h2>
+        <form id="login-form">
+          <div class="input-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" required placeholder="your@email.com">
+          </div>
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="auth-button">Login</button>
+        </form>
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+        <button id="google-login" class="social-button">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M21.35 11.5h-9.17v3.11h5.31c-.5 2.49-2.61 3.89-5.31 3.89-3.29 0-5.96-2.68-5.96-6s2.67-6 5.96-6c1.47 0 2.96.58 4.08 1.72l2.39-2.31C16.69 3.92 14.44 3 12 3 7.03 3 3 7.03 3 12s4.03 9 9 9c4.59 0 8.5-3.39 8.5-8.34 0-.36-.04-.72-.15-1.16z"/>
+          </svg>
+          Login with Google
+        </button>
+        <button id="anonymous-login" class="anon-button">Continue as Guest</button>
+      </div>
+      
+      <div class="tab-content" id="signup-content">
+        <h2>Create Account</h2>
+        <form id="signup-form">
+          <div class="input-group">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" required placeholder="your@email.com">
+          </div>
+          <div class="input-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" required placeholder="••••••••">
+          </div>
+          <div class="input-group">
+            <label for="signup-confirm">Confirm Password</label>
+            <input type="password" id="signup-confirm" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="auth-button">Sign Up</button>
+        </form>
+      </div>
+      
+      <div class="auth-message" id="auth-message"></div>
+    </div>
+  </div>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+             signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged } 
+           from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCuVSQHVyCG4glWNO1efGAe8nB885T6HUM",
+      authDomain: "to-do-list-e8758.firebaseapp.com",
+      projectId: "to-do-list-e8758",
+      storageBucket: "to-do-list-e8758.firebasestorage.app",
+      messagingSenderId: "938717568980",
+      appId: "1:938717568980:web:52e87c27b453d408dfc041",
+      measurementId: "G-Z11EK63HQB"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+    
+    // DOM Elements
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const googleLoginBtn = document.getElementById('google-login');
+    const anonymousLoginBtn = document.getElementById('anonymous-login');
+    const authMessage = document.getElementById('auth-message');
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Tab switching functionality
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.getAttribute('data-tab');
+        
+        // Update active tab button
+        authTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Show corresponding tab content
+        tabContents.forEach(content => content.classList.remove('active'));
+        document.getElementById(`${tabName}-content`).classList.add('active');
+        
+        // Clear any messages
+        authMessage.textContent = '';
+      });
+    });
+    
+    // Show auth message
+    const showMessage = (message, isError = false) => {
+      authMessage.textContent = message;
+      authMessage.className = 'auth-message';
+      if (isError) {
+        authMessage.classList.add('error');
+      } else {
+        authMessage.classList.add('success');
+      }
+    };
+    
+    // Email/Password Login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = 'index.html'; // Redirect to to-do app
+      } catch (error) {
+        showMessage(`Login failed: ${error.message}`, true);
+      }
+    });
+    
+    // Email/Password Signup
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm').value;
+      
+      if (password !== confirmPassword) {
+        showMessage('Passwords do not match', true);
+        return;
+      }
+      
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        showMessage('Account created successfully! Redirecting...', false);
+        setTimeout(() => {
+          window.location.href = 'index.html'; // Redirect to to-do app
+        }, 1500);
+      } catch (error) {
+        showMessage(`Signup failed: ${error.message}`, true);
+      }
+    });
+    
+    // Google Login
+    googleLoginBtn.addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, googleProvider);
+        window.location.href = 'index.html'; // Redirect to to-do app
+      } catch (error) {
+        showMessage(`Google login failed: ${error.message}`, true);
+      }
+    });
+    
+    // Anonymous Login
+    anonymousLoginBtn.addEventListener('click', async () => {
+      try {
+        await signInAnonymously(auth);
+        window.location.href = 'index.html'; // Redirect to to-do app
+      } catch (error) {
+        showMessage(`Guest login failed: ${error.message}`, true);
+      }
+    });
+    
+    // Check if user is already logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = 'index.html';
+      }
+    });
+    
+    // Create animated background particles
+    const backgroundParticles = document.querySelector('.background-particles');
+    for (let i = 0; i < 15; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      const size = Math.random() * 80 + 20;
+      const posX = Math.random() * window.innerWidth;
+      const posY = Math.random() * window.innerHeight;
+      const animDuration = Math.random() * 20 + 10;
+
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.left = `${posX}px`;
+      particle.style.top = `${posY}px`;
+      particle.style.animation = `scaleIn ${animDuration}s infinite alternate ease-in-out`;
+
+      backgroundParticles.appendChild(particle);
+    }
+  </script>
+</body>
+</html>

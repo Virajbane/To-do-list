@@ -3,45 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Modern To-Do List</title>
+  <title>Task Master</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="background-particles"></div>
+  <div class="background-animation">
+    <!-- Floating circles will be added here dynamically -->
+  </div>
   
-  <div class="container">
-    <h1 class="app-title">Task Master</h1>
-    
-    <div class="input-container">
-      <input type="text" class="task-input" placeholder="Add a new task...">
-      <button class="add-button">Add</button>
-    </div>
-    
-    <div class="tasks-container">
-      <div class="tasks-header">
-        <span class="tasks-count">0 tasks</span>
-        <button class="clear-completed">Clear completed</button>
+  <div class="app-wrapper">
+    <div class="container">
+      <h1 class="app-title">Task Master</h1>
+      
+      <div class="user-panel">
+        <div class="user-email">
+          <svg class="user-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span id="user-email">Loading...</span>
+        </div>
+        <button id="logout-button" class="logout-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Logout
+        </button>
       </div>
       
-      <ul class="task-list">
-        <div class="empty-state">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          <p>No tasks yet! Add a task to get started.</p>
+      <div class="input-container">
+        <input type="text" class="task-input" placeholder="Add a new task...">
+        <button class="add-button">Add</button>
+      </div>
+      
+      <div class="tasks-container">
+        <div class="tasks-header">
+          <span class="tasks-count">0 tasks</span>
+          <button class="clear-completed">Clear completed</button>
         </div>
-      </ul>
+        
+        <div class="task-list-container">
+          <ul class="task-list">
+            <!-- Tasks will be added here dynamically -->
+          </ul>
+          
+          <div class="empty-state">
+            <div class="shield-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <p>No tasks yet! Add a task to get started.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+  
+  <!-- Firebase SDK -->
   <script type="module">
     // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
+             query, where, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Your web app's Firebase configuration - using the same config from auth.html
     const firebaseConfig = {
       apiKey: "AIzaSyCuVSQHVyCG4glWNO1efGAe8nB885T6HUM",
       authDomain: "to-do-list-e8758.firebaseapp.com",
@@ -51,12 +80,74 @@
       appId: "1:938717568980:web:52e87c27b453d408dfc041",
       measurementId: "G-Z11EK63HQB"
     };
-  
+
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // Make Firebase services available globally
+    window.firebaseServices = {
+      auth, db, collection, addDoc, updateDoc, deleteDoc, doc,
+      query, where, orderBy, getDocs, writeBatch
+    };
+    
+    // Create background floating circles
+    const createBackgroundAnimation = () => {
+      const backgroundAnimation = document.querySelector('.background-animation');
+      const numCircles = 5;
+      
+      for (let i = 0; i < numCircles; i++) {
+        const circle = document.createElement('div');
+        circle.classList.add('floating-circle');
+        
+        // Random size between 100px and 300px
+        const size = Math.random() * 200 + 100;
+        circle.style.width = `${size}px`;
+        circle.style.height = `${size}px`;
+        
+        // Random position
+        circle.style.left = `${Math.random() * 100}%`;
+        circle.style.top = `${Math.random() * 100}%`;
+        
+        // Random animation delay
+        circle.style.animationDelay = `${Math.random() * 5}s`;
+        
+        backgroundAnimation.appendChild(circle);
+      }
+    };
+    
+    // Handle user logout
+    const handleLogout = async () => {
+      try {
+        await signOut(auth);
+        window.location.href = 'auth.html';
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+    };
+    
+    // Auth state observer
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        const userEmail = document.getElementById('user-email');
+        userEmail.textContent = user.email || "Guest User";
+        
+        // Initialize the app with the user's ID
+        window.initializeApp(user.uid);
+      } else {
+        // User is signed out, redirect to auth page
+        window.location.href = 'auth.html';
+      }
+    });
+    
+    // Add event listeners
+    document.getElementById('logout-button').addEventListener('click', handleLogout);
+    
+    // Create background animation
+    createBackgroundAnimation();
   </script>
-
   <script src="script.js"></script>
 </body>
 </html>

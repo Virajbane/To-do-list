@@ -1,340 +1,380 @@
-:root {
-    --black: #121212;
-    --dark-gray: #1e1e1e;
-    --medium-gray: #2d2d2d;
-    --light-gray: #aaaaaa;
-    --accent: #bb86fc;
-    --success: #03dac6;
-    --error: #cf6679;
-    --text: #ffffff;
-  }
-  
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  
-  body {
-    background-color: var(--black);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow-x: hidden;
-  }
-  
-  .container {
-    width: 100%;
-    max-width: 500px;
-    padding: 24px;
-  }
-  
-  .app-title {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-    text-align: center;
-    background: linear-gradient(135deg, var(--accent), var(--success));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+}
+
+body {
+  background-color: #121212;
+  min-height: 100vh;
+  color: rgba(255, 255, 255, 0.87);
+  position: relative;
+  overflow: hidden;
+}
+
+.background-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.floating-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(189, 124, 254, 0.3) 0%, rgba(189, 124, 254, 0.1) 70%, transparent 100%);
+  filter: blur(20px);
+  z-index: -1;
+  animation: floatAnimation 15s infinite ease-in-out;
+}
+
+@keyframes floatAnimation {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(5%, 10%) scale(1.05); }
+  50% { transform: translate(10%, -5%) scale(0.95); }
+  75% { transform: translate(-5%, -10%) scale(1.02); }
+}
+
+/* Center everything */
+.app-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.app-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  background: linear-gradient(90deg, #4a90e2, #63f5d2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+}
+
+.user-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background-color: rgba(30, 30, 30, 0.6);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+}
+
+.user-email {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-icon {
+  color: #bd7cfe;
+}
+
+.logout-button {
+  background-color: rgba(189, 124, 254, 0.2);
+  color: #bd7cfe;
+  border: 1px solid #bd7cfe;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logout-button:hover {
+  background-color: rgba(189, 124, 254, 0.3);
+}
+
+.input-container {
+  display: flex;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.task-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 4px 0 0 4px;
+  background-color: #242424;
+  color: #fff;
+  font-size: 16px;
+}
+
+.task-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+}
+
+.task-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.add-button {
+  padding: 0 20px;
+  background-color: #bd7cfe;
+  color: #fff;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-button:hover {
+  background-color: #a24dfd;
+}
+
+.tasks-container {
+  background-color: rgba(30, 30, 30, 0.6);
+  border-radius: 8px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.tasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tasks-count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.clear-completed {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clear-completed:hover {
+  color: #fff;
+}
+
+.task-list-container {
+  min-height: 200px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.task-list {
+  list-style: none;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s;
+  animation: fadeIn 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.task-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.task-item.slide-out {
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.task-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.task-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-checkbox:checked {
+  background-color: #bd7cfe;
+  border-color: #bd7cfe;
+}
+
+.task-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(189, 124, 254, 0.3);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  width: 120%;
+  height: 120%;
+  left: -10%;
+  top: -10%;
+  z-index: -1;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
     opacity: 0;
-    transform: translateY(-20px);
-    animation: fadeIn 0.8s ease forwards;
   }
-  
-  .input-container {
-    display: flex;
-    margin-bottom: 2rem;
-    transform: translateY(-20px);
-    opacity: 0;
-    animation: fadeIn 0.8s ease 0.2s forwards;
-  }
-  
-  .task-input {
-    flex: 1;
-    padding: 1rem 1.2rem;
-    border: none;
-    background: var(--dark-gray);
-    border-radius: 8px 0 0 8px;
-    color: var(--text);
-    font-size: 1rem;
-    outline: none;
-    transition: all 0.3s ease;
-  }
-  
-  .task-input:focus {
-    box-shadow: 0 0 0 2px var(--accent);
-  }
-  
-  .add-button {
-    padding: 1rem 1.5rem;
-    background: var(--accent);
-    color: var(--black);
-    border: none;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-  
-  .add-button:hover {
-    background: #cfb1ff;
-    transform: scale(1.05);
-  }
-  
-  .add-button:active {
-    transform: scale(0.95);
-  }
-  
-  .tasks-container {
-    background: var(--dark-gray);
-    border-radius: 12px;
-    padding: 1rem;
-    transform: translateY(-20px);
-    opacity: 0;
-    animation: fadeIn 0.8s ease 0.4s forwards;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  }
-  
-  .tasks-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.8rem;
-    border-bottom: 1px solid var(--medium-gray);
-  }
-  
-  .tasks-count {
-    font-weight: 600;
-    color: var(--light-gray);
-  }
-  
-  .clear-completed {
-    background: transparent;
-    border: none;
-    color: var(--light-gray);
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-  }
-  
-  .clear-completed:hover {
-    color: var(--error);
-  }
-  
-  .task-list {
-    list-style: none;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-  
-  .task-list::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  .task-list::-webkit-scrollbar-track {
-    background: var(--medium-gray);
-    border-radius: 4px;
-  }
-  
-  .task-list::-webkit-scrollbar-thumb {
-    background: var(--light-gray);
-    border-radius: 4px;
-  }
-  
-  .task-item {
-    background: var(--medium-gray);
-    padding: 1rem;
-    margin-bottom: 0.8rem;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: all 0.3s ease;
-    animation: slideIn 0.4s ease forwards;
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-  
-  .task-item:last-child {
-    margin-bottom: 0;
-  }
-  
-  .task-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-  
-  .task-content {
-    display: flex;
-    align-items: center;
-    flex: 1;
-  }
-  
-  .task-checkbox {
-    appearance: none;
-    -webkit-appearance: none;
-    height: 24px;
-    width: 24px;
-    background-color: var(--dark-gray);
-    border-radius: 50%;
-    margin-right: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid var(--light-gray);
-  }
-  
-  .task-checkbox:checked {
-    background-color: var(--success);
-    border-color: var(--success);
-  }
-  
-  .task-checkbox:checked::after {
-    content: "✓";
-    color: var(--black);
-    font-size: 1rem;
-    font-weight: bold;
-  }
-  
-  .task-text {
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    overflow-wrap: break-word;
-    max-width: 320px;
-  }
-  
-  .completed .task-text {
-    text-decoration: line-through;
-    opacity: 0.7;
-    color: var(--light-gray);
-  }
-  
-  .delete-button {
-    background: transparent;
-    border: none;
-    color: var(--light-gray);
-    padding: 0.5rem;
-    cursor: pointer;
-    font-size: 1.1rem;
-    border-radius: 4px;
-    opacity: 0;
-    transition: all 0.3s ease;
-  }
-  
-  .task-item:hover .delete-button {
-    opacity: 0.7;
-  }
-  
-  .delete-button:hover {
-    color: var(--error);
-    opacity: 1;
-  }
-  
-  .empty-state {
-    text-align: center;
-    padding: 2rem 0;
-    color: var(--light-gray);
-    font-style: italic;
-  }
-  
-  .empty-state p {
-    margin-top: 0.5rem;
-  }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  
-  @keyframes scaleIn {
-    from {
-      transform: scale(0.8);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes shake {
-    0%, 100% {
-      transform: translateX(0);
-    }
-    20%, 60% {
-      transform: translateX(-5px);
-    }
-    40%, 80% {
-      transform: translateX(5px);
-    }
-  }
-  
-  .shake {
-    animation: shake 0.4s ease;
-  }
-  
-  .slide-out {
-    animation: slideOut 0.4s ease forwards;
-  }
-  
-  @keyframes slideOut {
-    to {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-  }
-  
-  .background-particles {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-  }
-  
-  .particle {
-    position: absolute;
-    background: var(--accent);
-    border-radius: 50%;
-    opacity: 0.15;
-  }
-  
-  @media (max-width: 600px) {
-    .container {
-      padding: 16px;
-    }
-    
-    .app-title {
-      font-size: 2rem;
-    }
-    
-    .task-text {
-      max-width: 220px;
-    }
-  }
+}
+
+.task-text {
+  font-size: 16px;
+  transition: all 0.2s ease;
+  word-break: break-word;
+}
+
+.task-item.completed .task-text {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: line-through;
+}
+
+.delete-button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+}
+
+.delete-button:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+.shield-icon {
+  margin-bottom: 16px;
+}
+
+.shield-icon svg {
+  stroke: rgba(255, 255, 255, 0.3);
+  width: 48px;
+  height: 48px;
+}
+
+.empty-state p {
+  font-size: 16px;
+}
+
+/* Pulse animation for empty state */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 0.5; }
+}
+
+.empty-state .shield-icon {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Custom scrollbar */
+.task-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.task-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.task-list-container::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.task-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Task hover effect */
+.task-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #bd7cfe, transparent);
+  transition: width 0.6s ease;
+}
+
+.task-item:hover::after {
+  width: 100%;
+}
