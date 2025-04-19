@@ -2,8 +2,8 @@
 window.initializeApp = (userId) => {
   // Get Firebase services from the window object
   const { 
-    auth, db, collection, addDoc, updateDoc, deleteDoc, doc,
-    query, where, orderBy, getDocs, writeBatch
+    auth, db, storage, collection, addDoc, updateDoc, deleteDoc, doc,
+    query, where, orderBy, getDocs, writeBatch, ref, uploadBytes, getDownloadURL, deleteObject
   } = window.firebaseServices;
 
   let tasks = [];
@@ -15,6 +15,8 @@ window.initializeApp = (userId) => {
   const tasksCount = document.querySelector('.tasks-count');
   const clearCompletedBtn = document.querySelector('.clear-completed');
   const emptyState = document.querySelector('.empty-state');
+  const uploadSpinner = document.querySelector('.upload-spinner');
+  const fileInput = document.querySelector('.file-input');
 
   // Load tasks from Firestore
   const loadTasks = async () => {
@@ -34,6 +36,41 @@ window.initializeApp = (userId) => {
     }
   };
 
+  // Upload image to Firebase Storage - Move this functionality to file input change event
+  const uploadImage = async (file) => {
+    if (!file) return null;
+    
+    try {
+      // Create a unique file name
+      const timestamp = Date.now();
+      const fileName = `task_images/${userId}/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+      
+      // Upload file
+      await uploadBytes(storageRef, file);
+      
+      // Get download URL
+      const imageUrl = await getDownloadURL(storageRef);
+      
+      return { url: imageUrl, path: fileName };
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+  };
+
+  // Delete image from Firebase Storage
+  const deleteImage = async (imagePath) => {
+    if (!imagePath) return;
+    
+    try {
+      const imageRef = ref(storage, imagePath);
+      await deleteObject(imageRef);
+    } catch (error) {
+      console.error("Error deleting image:", error);
+    }
+  };
+
   // Add new task to Firestore
   const addTask = async () => {
     const text = taskInput.value.trim();
@@ -50,13 +87,23 @@ window.initializeApp = (userId) => {
         text,
         completed: false,
         timestamp: Date.now(),
-        userId
+        userId,
+        imageUrl: window.uploadedImageUrl || null,
+        imagePath: window.uploadedImagePath || null
       };
 
       const docRef = await addDoc(collection(db, 'tasks'), newTask);
       tasks.unshift({ id: docRef.id, ...newTask });
 
       taskInput.value = '';
+      
+      // Reset image preview
+      document.querySelector('.image-preview').style.display = 'none';
+      document.querySelector('.file-input').value = '';
+      window.selectedFile = null;
+      window.uploadedImageUrl = null;
+      window.uploadedImagePath = null;
+      
       renderTasks();
       
       // Focus back on input for quick sequential task adding
@@ -90,6 +137,11 @@ window.initializeApp = (userId) => {
 
     setTimeout(async () => {
       try {
+        // Delete image if exists
+        if (task.imagePath) {
+          await deleteImage(task.imagePath);
+        }
+        
         await deleteDoc(doc(db, 'tasks', task.id));
         tasks.splice(index, 1);
         renderTasks();
@@ -108,10 +160,14 @@ window.initializeApp = (userId) => {
     try {
       const batch = writeBatch(db);
       
-      completed.forEach(task => {
+      // Delete images for completed tasks
+      for (const task of completed) {
+        if (task.imagePath) {
+          await deleteImage(task.imagePath);
+        }
         const docRef = doc(db, 'tasks', task.id);
         batch.delete(docRef);
-      });
+      }
 
       // Add subtle animation to clear button
       clearCompletedBtn.style.transform = 'scale(1.1)';
@@ -147,14 +203,29 @@ window.initializeApp = (userId) => {
         // Staggered animation
         taskItem.style.animationDelay = `${index * 0.05}s`;
 
-        taskItem.innerHTML = `
+        // Build task HTML
+        let taskHTML = `
           <div class="task-content">
             <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
-            <span class="task-text">${task.text}</span>
+            <div class="task-details">
+              <span class="task-text">${task.text}</span>
+            </div>`;
+        
+        // If task has an image
+        if (task.imageUrl) {
+          taskHTML += `
+            <div class="task-image" data-url="${task.imageUrl}">
+              <img src="${task.imageUrl}" alt="Task image">
+            </div>`;
+        }
+        
+        taskHTML += `
           </div>
-          <button class="delete-button">✕</button>
-        `;
-
+          <div class="task-actions">
+            <button class="delete-button">✕</button>
+          </div>`;
+        
+        taskItem.innerHTML = taskHTML;
         taskList.appendChild(taskItem);
 
         // Add ripple effect on click
@@ -169,10 +240,69 @@ window.initializeApp = (userId) => {
           toggleTask(index);
         });
         
+        // Add image click event
+        const taskImage = taskItem.querySelector('.task-image');
+        if (taskImage) {
+          taskImage.addEventListener('click', () => {
+            window.showImageModal(task.imageUrl);
+          });
+        }
+        
         taskItem.querySelector('.delete-button').addEventListener('click', () => removeTask(index, taskItem));
       });
     }
   };
+
+  // Handle file input change
+  fileInput.addEventListener('change', async function(e) {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.type.match('image.*')) {
+        window.selectedFile = file;
+        
+        // Show loading spinner
+        uploadSpinner.style.display = 'block';
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('preview-image').src = e.target.result;
+          document.querySelector('.image-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        
+        // Upload the image immediately
+        try {
+          const imageData = await uploadImage(file);
+          if (imageData) {
+            window.uploadedImageUrl = imageData.url;
+            window.uploadedImagePath = imageData.path;
+          }
+        } catch (err) {
+          console.error("Failed to upload image:", err);
+        } finally {
+          // Hide loading spinner
+          uploadSpinner.style.display = 'none';
+        }
+      } else {
+        alert('Please select an image file');
+        window.selectedFile = null;
+      }
+    }
+  });
+
+  // Clear image button
+  document.querySelector('.clear-image').addEventListener('click', function() {
+    document.querySelector('.image-preview').style.display = 'none';
+    fileInput.value = '';
+    window.selectedFile = null;
+    
+    // If image was already uploaded, delete it from storage
+    if (window.uploadedImagePath) {
+      deleteImage(window.uploadedImagePath);
+      window.uploadedImageUrl = null;
+      window.uploadedImagePath = null;
+    }
+  });
 
   // User Events
   addButton.addEventListener('click', addTask);
