@@ -15,7 +15,6 @@ window.initializeApp = (userId) => {
   const tasksCount = document.querySelector('.tasks-count');
   const clearCompletedBtn = document.querySelector('.clear-completed');
   const emptyState = document.querySelector('.empty-state');
-  const uploadSpinner = document.querySelector('.upload-spinner');
   const fileInput = document.querySelector('.file-input');
 
   // Load tasks from Firestore
@@ -260,9 +259,7 @@ window.initializeApp = (userId) => {
       if (file.type.match('image.*')) {
         window.selectedFile = file;
         
-        // Show loading spinner
-        uploadSpinner.style.display = 'block';
-        
+        // Show image preview immediately
         const reader = new FileReader();
         reader.onload = function(e) {
           document.getElementById('preview-image').src = e.target.result;
@@ -270,7 +267,7 @@ window.initializeApp = (userId) => {
         };
         reader.readAsDataURL(file);
         
-        // Upload the image immediately
+        // Upload the image immediately without showing spinner
         try {
           const imageData = await uploadImage(file);
           if (imageData) {
@@ -279,9 +276,6 @@ window.initializeApp = (userId) => {
           }
         } catch (err) {
           console.error("Failed to upload image:", err);
-        } finally {
-          // Hide loading spinner
-          uploadSpinner.style.display = 'none';
         }
       } else {
         alert('Please select an image file');

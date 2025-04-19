@@ -398,6 +398,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-bottom: 10px;
 }
 
 .image-upload-button:hover {
@@ -405,9 +406,9 @@ body {
 }
 
 .image-preview {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
   overflow: hidden;
   display: none;
   position: relative;
@@ -439,9 +440,9 @@ body {
 }
 
 .task-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -535,13 +536,7 @@ body {
 
 /* Loading indicator for image upload */
 .upload-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(189, 124, 254, 0.3);
-  border-top: 2px solid #bd7cfe;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  display: none;
+  display: none !important;
 }
 
 @keyframes spin {
