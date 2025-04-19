@@ -1,46 +1,126 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
+    // 🔥 Initialize Firebase references
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  
+    let userId = null;
+    let tasks = [];
+  
+    // 🌐 DOM Elements
     const taskInput = document.querySelector('.task-input');
     const addButton = document.querySelector('.add-button');
     const taskList = document.querySelector('.task-list');
     const tasksCount = document.querySelector('.tasks-count');
     const clearCompletedBtn = document.querySelector('.clear-completed');
     const backgroundParticles = document.querySelector('.background-particles');
-    
-    // State
-    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    
-    // Generate background particles
+  
+    // 🎆 Animated background particles
     const createParticles = () => {
       for (let i = 0; i < 15; i++) {
         const particle = document.createElement('div');
         particle.classList.add('particle');
-        
         const size = Math.random() * 80 + 20;
         const posX = Math.random() * window.innerWidth;
         const posY = Math.random() * window.innerHeight;
         const animDuration = Math.random() * 20 + 10;
-        
+  
         particle.style.width = `${size}px`;
         particle.style.height = `${size}px`;
         particle.style.left = `${posX}px`;
         particle.style.top = `${posY}px`;
         particle.style.animation = `scaleIn ${animDuration}s infinite alternate ease-in-out`;
-        
+  
         backgroundParticles.appendChild(particle);
       }
     };
-    
-    // Render tasks
+  
+    // 🔐 Sign in anonymously with Firebase Auth
+    auth.signInAnonymously()
+      .then(userCredential => {
+        userId = userCredential.user.uid;
+        loadTasks(); // Load tasks after login
+      })
+      .catch(err => {
+        alert("Authentication failed: " + err.message);
+      });
+  
+    // 📥 Load tasks from Firestore
+    const loadTasks = async () => {
+      const snapshot = await db.collection('tasks')
+        .where('userId', '==', userId)
+        .orderBy('timestamp')
+        .get();
+  
+      tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderTasks();
+    };
+  
+    // ➕ Add new task to Firestore
+    const addTask = async () => {
+      const text = taskInput.value.trim();
+      if (!text) return;
+  
+      const newTask = {
+        text,
+        completed: false,
+        timestamp: Date.now(),
+        userId // Store which user the task belongs to
+      };
+  
+      const docRef = await db.collection('tasks').add(newTask); // ⬅️ Firestore add
+      tasks.push({ id: docRef.id, ...newTask });
+  
+      taskInput.value = '';
+      renderTasks();
+    };
+  
+    // 🔁 Toggle task completion in Firestore
+    const toggleTask = async (index) => {
+      const task = tasks[index];
+      task.completed = !task.completed;
+  
+      await db.collection('tasks').doc(task.id).update({
+        completed: task.completed
+      }); // ⬅️ Firestore update
+  
+      renderTasks();
+    };
+  
+    // ❌ Delete task from Firestore
+    const removeTask = async (index, taskElement) => {
+      const task = tasks[index];
+      taskElement.classList.add('slide-out');
+  
+      setTimeout(async () => {
+        await db.collection('tasks').doc(task.id).delete(); // ⬅️ Firestore delete
+        tasks.splice(index, 1);
+        renderTasks();
+      }, 300);
+    };
+  
+    // 🧹 Clear all completed tasks
+    const clearCompleted = async () => {
+      const completed = tasks.filter(t => t.completed);
+      const batch = db.batch(); // Use Firestore batch delete
+  
+      completed.forEach(task => {
+        const docRef = db.collection('tasks').doc(task.id);
+        batch.delete(docRef);
+      });
+  
+      await batch.commit(); // ⬅️ Firestore batch commit
+      tasks = tasks.filter(t => !t.completed);
+      renderTasks();
+    };
+  
+    // 🖼️ Render all tasks to UI
     const renderTasks = () => {
       taskList.innerHTML = '';
-      
+  
       if (tasks.length === 0) {
         taskList.innerHTML = `
           <div class="empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
+            <svg width="64" height="64" ...></svg>
             <p>No tasks yet! Add a task to get started.</p>
           </div>
         `;
@@ -48,12 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks.forEach((task, index) => {
           const taskItem = document.createElement('li');
           taskItem.classList.add('task-item');
-          if (task.completed) {
-            taskItem.classList.add('completed');
-          }
-          
+          if (task.completed) taskItem.classList.add('completed');
           taskItem.style.animationDelay = `${index * 0.05}s`;
-          
+  
           taskItem.innerHTML = `
             <div class="task-content">
               <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
@@ -61,109 +138,28 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <button class="delete-button">✕</button>
           `;
-          
+  
           taskList.appendChild(taskItem);
-          
-          // Checkbox event listener
-          const checkbox = taskItem.querySelector('.task-checkbox');
-          checkbox.addEventListener('change', () => {
-            toggleTask(index);
-          });
-          
-          // Delete button event listener
-          const deleteBtn = taskItem.querySelector('.delete-button');
-          deleteBtn.addEventListener('click', () => {
-            removeTask(index, taskItem);
-          });
+  
+          taskItem.querySelector('.task-checkbox').addEventListener('change', () => toggleTask(index));
+          taskItem.querySelector('.delete-button').addEventListener('click', () => removeTask(index, taskItem));
         });
       }
-      
+  
       updateTasksCount();
     };
-    
-    // Add new task
-    const addTask = () => {
-      const text = taskInput.value.trim();
-      
-      if (text === '') {
-        taskInput.classList.add('shake');
-        setTimeout(() => {
-          taskInput.classList.remove('shake');
-        }, 400);
-        return;
-      }
-      
-      const newTask = {
-        text,
-        completed: false,
-        timestamp: Date.now()
-      };
-      
-      tasks.push(newTask);
-      saveTasks();
-      taskInput.value = '';
-      renderTasks();
-      
-      // Add task animation effect
-      taskList.lastChild.style.animation = 'fadeIn 0.4s ease forwards';
-    };
-    
-    // Toggle task completion
-    const toggleTask = (index) => {
-      tasks[index].completed = !tasks[index].completed;
-      saveTasks();
-      renderTasks();
-    };
-    
-    // Remove task
-    const removeTask = (index, taskElement) => {
-      taskElement.classList.add('slide-out');
-      
-      setTimeout(() => {
-        tasks.splice(index, 1);
-        saveTasks();
-        renderTasks();
-      }, 300);
-    };
-    
-    // Clear completed tasks
-    const clearCompleted = () => {
-      const completedTasks = document.querySelectorAll('.task-item.completed');
-      
-      completedTasks.forEach(task => {
-        task.classList.add('slide-out');
-      });
-      
-      setTimeout(() => {
-        tasks = tasks.filter(task => !task.completed);
-        saveTasks();
-        renderTasks();
-      }, 300);
-    };
-    
-    // Update tasks count
+  
     const updateTasksCount = () => {
       const remaining = tasks.filter(task => !task.completed).length;
       tasksCount.textContent = `${remaining} task${remaining !== 1 ? 's' : ''} remaining`;
     };
-    
-    // Save tasks to localStorage
-    const saveTasks = () => {
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-    };
-    
-    // Event listeners
+  
+    // 🎯 User Events
     addButton.addEventListener('click', addTask);
-    
-    taskInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        addTask();
-      }
-    });
-    
+    taskInput.addEventListener('keydown', e => e.key === 'Enter' && addTask());
     clearCompletedBtn.addEventListener('click', clearCompleted);
-    
-    // Initial renders
+  
+    // ⏱ Start everything
     createParticles();
-    renderTasks();
   });
+  
